@@ -3,10 +3,10 @@
 
 The page always tries the published files in the election-2026 repository first; these
 bundled copies are only used when GitHub can't be reached. This merges the daily
-legislative feed with the 30-minute updates (newest row wins) and copies the
+legislative feed with the latest automatic update (newest row wins) and copies the
 Congress/governor file. Standard library only.
 """
-import json, sys
+import json, sys, time
 from pathlib import Path
 from urllib.request import Request, urlopen
 
@@ -14,9 +14,17 @@ ROOT = Path(__file__).resolve().parent.parent
 BASE = 'https://raw.githubusercontent.com/dwhitney2181/election-2026/main/'
 
 
-def get(name):
-    with urlopen(Request(BASE + name, headers={'User-Agent': 'legislative-atlas-refresh'}), timeout=60) as r:
-        return json.loads(r.read().decode('utf-8'))
+def get(name, tries=4):
+    """Fetch a published file, retrying GitHub's occasional 5xx/timeout hiccups."""
+    for n in range(tries):
+        try:
+            with urlopen(Request(BASE + name, headers={'User-Agent': 'legislative-atlas-refresh'}), timeout=60) as r:
+                return json.loads(r.read().decode('utf-8'))
+        except Exception as e:
+            if n == tries - 1:
+                raise
+            print(f'{name}: {e}; retrying in {15 * (n + 1)} s')
+            time.sleep(15 * (n + 1))
 
 
 def key(r):
