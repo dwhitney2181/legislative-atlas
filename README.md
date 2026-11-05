@@ -1,8 +1,16 @@
-# U.S. State and Territory Legislature Atlas — 2026 (v1.3.0)
+# U.S. State and Territory Legislature Atlas — 2026 (v1.4.0)
 
 An interactive map and seat list of the 2026 state legislative elections in all 50 states, D.C. and the five inhabited territories (56 jurisdictions, 7,575 seats; 6,223 seats regularly on the 2026 ballot, per NCSL's June 25, 2026 chamber schedules). Results are **unofficial** and partial until canvassed.
 
-## What's new in v1.3.0
+## What's new in v1.4.0: runs on its own
+
+- **No server needed.** The atlas is now a plain website: put the files on GitHub Pages (or any static host) and it works. The Python server is optional.
+- **Instant clicks.** Every result loads once when the page opens, and every state's district map ships with the site (`geo/`), so choosing a state draws it right away instead of waiting on a server.
+- **Results stay current by themselves.** The page reads the published results feed (`atlas-feed.json` in the election-2026 repository) straight from GitHub, so updating that file updates the site. If GitHub can't be reached, it uses the bundled copy, `results_feed.json`. **Update selected** re-reads the feed; auto-refresh re-reads it every 15 minutes.
+- **Bundled district maps.** 2022 Census boundaries for all 50 states and Puerto Rico, labeled to match the results feed. Michigan, Wisconsin, Ohio, Georgia, North Carolina, Washington, Montana, North Dakota and New York redrew some districts after 2022: for those, the page first tries Election Wrld's current maps and, if it can't reach them, shows the 2022 lines with a note saying so. New Hampshire's floterial (overlay) districts have no separate shape; their results appear in the seat list.
+- Multi-seat districts are colored once every seat in them is reported, even without a member roster.
+
+## v1.3.0
 
 - **Every state loads on open.** The page now pulls one nationwide results feed when it starts (`GET /api/results-all`), so a first-time visitor sees reported winners and flips for every state that has them, not only Utah.
 - **Nationwide results feed.** The server reads `atlas-feed.json` from the [election-2026](https://github.com/dwhitney2181/election-2026) repository (MultiState reported winners for 45 states, plus Utah vote counts). A dated copy, `results_feed.json`, ships with the app and is used automatically if GitHub can't be reached.
@@ -15,13 +23,13 @@ Earlier fixes still apply: the Utah House 41 correction (John Arthur, D), restor
 
 ## Run it
 
-```bash
-python3 -u live_server.py        # then open http://127.0.0.1:8766
-```
+**As a website (recommended):** turn on GitHub Pages for this repository (Settings → Pages → Deploy from a branch → `main`, `/ (root)`). The site appears at `https://<username>.github.io/legislative-atlas/`. Nothing else is needed.
 
-No packages are needed beyond Python 3. On Render, `render.yaml` and the `Dockerfile` deploy it on the free plan (see `START_HERE.md`).
+**On your computer:** open a terminal in this folder and run `python3 -m http.server 8000`, then browse to http://localhost:8000. (Opening `index.html` by double-clicking won't load the maps, because browsers block local file reads.)
 
-### Settings (environment variables)
+**With the optional server:** `python3 -u live_server.py`, then http://127.0.0.1:8766. The server adds live MultiState and civicAPI checks for the selected state every 3 minutes, and a member-roster cache. `render.yaml` and the `Dockerfile` deploy it to Render's free plan (see `START_HERE.md`).
+
+### Server settings (environment variables; only used by `live_server.py`)
 
 | Variable | Default | Purpose |
 |---|---|---|
@@ -57,12 +65,13 @@ JSON (`{"races": [...]}`) or CSV with columns
 - Washington and Idaho elect each House position separately; the feed numbers them in the order MultiState lists them.
 - National state shading stays neutral unless a full seat roster is loaded; a handful of results never turns a whole state red or blue.
 
-## Updating the feed
+## Updating the data
 
-The feed is built by `tools/build_atlas_feed.py` in the election-2026 repository. Re-run it after updating that repository's results files and push; the atlas picks up the change within 10 minutes. To refresh the bundled copy here, copy `atlas-feed.json` over `results_feed.json`.
+- **Results:** the feed is built by `tools/build_atlas_feed.py` in the election-2026 repository. Re-run it after updating that repository's results files and push; open atlas pages pick it up at their next refresh (GitHub may take up to 5 minutes to serve the new file). To refresh the bundled fallback copy here, copy `atlas-feed.json` over `results_feed.json`.
+- **Maps:** `tools/build_geo.py` rebuilds `geo/` from the Census files (instructions at the top of the script).
 
 ## Sources and limits
 
-Sources and limits are described in `source-policy.html`: NCSL, U.S. Census geographic files, MultiState, Election Wrld, civicAPI and the local news outlets named in each record. District maps load from Election Wrld; if that site is unavailable, the page shows a seat grid instead. Some 2026 district boundaries may differ from the Census files. Check results against the linked sources before relying on them.
+Sources and limits are described in `source-policy.html`: NCSL, U.S. Census geographic files, MultiState, Election Wrld, civicAPI and the local news outlets named in each record. District maps ship with the site (2022 Census cartographic boundaries); member rosters, when available, come from Election Wrld. Some 2026 district boundaries may differ from the Census files. Check results against the linked sources before relying on them.
 
 The server is a single Python process and has not been load-tested for heavy public traffic.

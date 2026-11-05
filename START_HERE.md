@@ -1,12 +1,22 @@
-# Legislative Atlas: GitHub + Render free deployment
+# Legislative Atlas: putting it online
 
-This is the deployable v1.3.0 project. Its `render.yaml` explicitly sets `plan: free`; confirm the Render review page shows $0 for the web service before approval.
+## Easiest: GitHub Pages (no server, never sleeps)
+1. Open the `legislative-atlas` repository on GitHub, then **Settings → Pages**.
+2. Under **Build and deployment**, choose **Deploy from a branch**, branch `main`, folder `/ (root)`, and click **Save**.
+3. After a minute or two the site is live at `https://<your-username>.github.io/legislative-atlas/`. Share that link.
+4. The repository must be public for free GitHub Pages.
+
+Results update by themselves when `atlas-feed.json` in the election-2026 repository is updated. The Render setup below is optional: it adds live per-state checks of MultiState and civicAPI.
+
+# Optional: GitHub + Render free deployment
+
+This is the deployable v1.4.0 project. Its `render.yaml` explicitly sets `plan: free`; confirm the Render review page shows $0 for the web service before approval.
 
 ## GitHub (browser only)
 1. Create a repository named `legislative-atlas` at https://github.com/new (public or private). Do not initialize it with a README.
 2. Unzip this package on your Mac.
 3. Open the new repository, click **uploading an existing file** or **Add file > Upload files**.
-4. In Finder, open the extracted project folder and drag the FILES AND FOLDERS INSIDE IT to the upload drop zone. All required files should be at the repository ROOT, not under a nested folder. The key files are `render.yaml`, `Dockerfile`, `index.html`, `live_server.py`, `result_store.py` and `results_feed.json`.
+4. In Finder, open the extracted project folder and drag the FILES AND FOLDERS INSIDE IT to the upload drop zone. All required files should be at the repository ROOT, not under a nested folder. The key files are `render.yaml`, `Dockerfile`, `index.html`, `live_server.py`, `result_store.py`, `results_feed.json` and the `geo/` folder.
 5. Click Commit changes. Do not upload your Mac's local `runtime/` folder, personal data, or credentials.
 
 ## Render

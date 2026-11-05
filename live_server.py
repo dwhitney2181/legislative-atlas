@@ -554,7 +554,7 @@ class H(BaseHTTPRequestHandler):
                 if st not in STATES:return self.err('Unknown jurisdiction',400)
                 return self.json(get_results(st))
             if path.path=='/api/results-all':return self.json(all_results())
-            if path.path=='/api/health':return self.json({'status':'ok','version':'1.3.0','time':utcnow()})
+            if path.path=='/api/health':return self.json({'status':'ok','version':'1.4.0','time':utcnow()})
             if path.path=='/api/coverage':
                 try:extra=feed_rows_by_state()['rows']
                 except Exception:extra={}
@@ -562,6 +562,11 @@ class H(BaseHTTPRequestHandler):
             if path.path=='/jurisdictions_2026.csv':return self.send((HERE/'jurisdictions_2026.csv').read_bytes(),'text/csv')
             if path.path=='/README.md':return self.send((HERE/'README.md').read_bytes(),'text/plain')
             if path.path=='/source-policy.html':return self.send((HERE/'source-policy.html').read_bytes(),'text/html; charset=utf-8')
+            # Static files the standalone page loads (bundled maps and results feed copy).
+            rel=path.path.lstrip('/')
+            if re.fullmatch(r'(geo/(sld/[a-z]{2}|states)\.topo\.json|results_feed\.json|[a-z0-9_]+_snapshot\.json|island_geography\.json)',rel):
+                f=(HERE/rel).resolve()
+                if HERE in f.parents and f.is_file():return self.send(f.read_bytes(),'application/json')
             return self.err('Not found',404)
         except Exception as e:return self.err(str(e),503)
     def json(self,obj):return self.send(json.dumps(obj,separators=(',',':')).encode(),'application/json')
