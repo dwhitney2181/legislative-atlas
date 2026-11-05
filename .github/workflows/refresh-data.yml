@@ -1,0 +1,40 @@
+name: Refresh bundled data
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-bundled-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Copy the latest published results
+        run: python3 tools/refresh_bundled.py
+      - name: Rebuild member rosters from Open States
+        run: |
+          pip install --quiet pyyaml
+          git clone --quiet --depth 1 --filter=blob:none --sparse https://github.com/openstates/people /tmp/people
+          git -C /tmp/people sparse-checkout set --no-cone '/data/*/legislature/*'
+          OPENSTATES_PEOPLE=/tmp/people python3 tools/build_rosters.py
+      - name: Save if anything changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results_feed.json federal_results.json data/rosters
+          if git diff --cached --quiet; then echo "Nothing changed"; exit 0; fi
+          git commit -m "Refresh bundled results and rosters ($(date -u +'%b %d %H:%M UTC'))"
+          git pull --rebase origin main
+          git push origin HEAD:main

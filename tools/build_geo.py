@@ -52,8 +52,10 @@ def skey(s):  # order-free
 
 
 def display(name):
-    """Readable fallback when the feed has no row for this district."""
-    n = re.sub(r'\s*(State (House|Senate) District|State Legislative Subdistrict|Legislative District|Senate District|State House District|District)\s*', ' ', name).strip()
+    """District label when the feed has no row for it yet ('Missouri State House District 118' -> '118')."""
+    name = str(name or '').strip()
+    m = re.search(r'(?i)\b(?:sub)?district\b\s*(.*)$', name)
+    n = m.group(1).strip() if m and m.group(1).strip() else re.sub(r'(?i)\s*(?:state\s+)?(?:senate|house)?\s*(?:sub)?district\s*$', '', name).strip() or name
     m = re.fullmatch(r'([A-Za-z .]+?)\s+0*(\d+)', n)  # 'Hillsborough 24' -> 'Hillsborough-24'
     if m:
         return f'{m.group(1)}-{m.group(2)}'

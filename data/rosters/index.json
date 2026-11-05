@@ -1,0 +1,333 @@
+{
+ "as_of": "2026-11-04",
+ "jurisdictions": {
+  "AL": {
+   "roster": true,
+   "count": 140,
+   "seats": 140,
+   "unmatched_districts": 0
+  },
+  "AK": {
+   "roster": true,
+   "count": 60,
+   "seats": 60,
+   "unmatched_districts": 0
+  },
+  "AZ": {
+   "roster": true,
+   "count": 90,
+   "seats": 90,
+   "unmatched_districts": 0
+  },
+  "AR": {
+   "roster": true,
+   "count": 132,
+   "seats": 135,
+   "unmatched_districts": 0
+  },
+  "CA": {
+   "roster": true,
+   "count": 118,
+   "seats": 120,
+   "unmatched_districts": 0
+  },
+  "CO": {
+   "roster": true,
+   "count": 100,
+   "seats": 100,
+   "unmatched_districts": 0
+  },
+  "CT": {
+   "roster": true,
+   "count": 187,
+   "seats": 187,
+   "unmatched_districts": 0
+  },
+  "DE": {
+   "roster": true,
+   "count": 62,
+   "seats": 62,
+   "unmatched_districts": 0
+  },
+  "FL": {
+   "roster": true,
+   "count": 155,
+   "seats": 160,
+   "unmatched_districts": 0
+  },
+  "GA": {
+   "roster": true,
+   "count": 236,
+   "seats": 236,
+   "unmatched_districts": 0
+  },
+  "HI": {
+   "roster": true,
+   "count": 76,
+   "seats": 76,
+   "unmatched_districts": 0
+  },
+  "ID": {
+   "roster": true,
+   "count": 105,
+   "seats": 105,
+   "unmatched_districts": 0
+  },
+  "IL": {
+   "roster": true,
+   "count": 177,
+   "seats": 177,
+   "unmatched_districts": 0
+  },
+  "IN": {
+   "roster": true,
+   "count": 150,
+   "seats": 150,
+   "unmatched_districts": 0
+  },
+  "IA": {
+   "roster": true,
+   "count": 148,
+   "seats": 150,
+   "unmatched_districts": 0
+  },
+  "KS": {
+   "roster": true,
+   "count": 165,
+   "seats": 165,
+   "unmatched_districts": 0
+  },
+  "KY": {
+   "roster": true,
+   "count": 138,
+   "seats": 138,
+   "unmatched_districts": 0
+  },
+  "LA": {
+   "roster": true,
+   "count": 141,
+   "seats": 144,
+   "unmatched_districts": 0
+  },
+  "ME": {
+   "roster": true,
+   "count": 188,
+   "seats": 186,
+   "unmatched_districts": 2
+  },
+  "MD": {
+   "roster": true,
+   "count": 188,
+   "seats": 188,
+   "unmatched_districts": 0
+  },
+  "MA": {
+   "roster": true,
+   "count": 197,
+   "seats": 200,
+   "unmatched_districts": 0
+  },
+  "MI": {
+   "roster": true,
+   "count": 148,
+   "seats": 148,
+   "unmatched_districts": 0
+  },
+  "MN": {
+   "roster": true,
+   "count": 200,
+   "seats": 201,
+   "unmatched_districts": 0
+  },
+  "MS": {
+   "roster": true,
+   "count": 171,
+   "seats": 174,
+   "unmatched_districts": 0
+  },
+  "MO": {
+   "roster": true,
+   "count": 188,
+   "seats": 197,
+   "unmatched_districts": 0
+  },
+  "MT": {
+   "roster": true,
+   "count": 150,
+   "seats": 150,
+   "unmatched_districts": 0
+  },
+  "NE": {
+   "roster": true,
+   "count": 49,
+   "seats": 49,
+   "unmatched_districts": 0
+  },
+  "NV": {
+   "roster": true,
+   "count": 63,
+   "seats": 63,
+   "unmatched_districts": 0
+  },
+  "NH": {
+   "roster": true,
+   "count": 406,
+   "seats": 424,
+   "unmatched_districts": 22
+  },
+  "NJ": {
+   "roster": true,
+   "count": 120,
+   "seats": 120,
+   "unmatched_districts": 0
+  },
+  "NM": {
+   "roster": true,
+   "count": 109,
+   "seats": 112,
+   "unmatched_districts": 0
+  },
+  "NY": {
+   "roster": true,
+   "count": 212,
+   "seats": 213,
+   "unmatched_districts": 0
+  },
+  "NC": {
+   "roster": true,
+   "count": 170,
+   "seats": 170,
+   "unmatched_districts": 0
+  },
+  "ND": {
+   "roster": true,
+   "count": 141,
+   "seats": 141,
+   "unmatched_districts": 0
+  },
+  "OH": {
+   "roster": true,
+   "count": 130,
+   "seats": 132,
+   "unmatched_districts": 0
+  },
+  "OK": {
+   "roster": true,
+   "count": 146,
+   "seats": 149,
+   "unmatched_districts": 0
+  },
+  "OR": {
+   "roster": true,
+   "count": 90,
+   "seats": 90,
+   "unmatched_districts": 0
+  },
+  "PA": {
+   "roster": true,
+   "count": 253,
+   "seats": 253,
+   "unmatched_districts": 0
+  },
+  "RI": {
+   "roster": true,
+   "count": 112,
+   "seats": 113,
+   "unmatched_districts": 0
+  },
+  "SC": {
+   "roster": true,
+   "count": 170,
+   "seats": 170,
+   "unmatched_districts": 0
+  },
+  "SD": {
+   "roster": true,
+   "count": 105,
+   "seats": 105,
+   "unmatched_districts": 0
+  },
+  "TN": {
+   "roster": true,
+   "count": 131,
+   "seats": 132,
+   "unmatched_districts": 0
+  },
+  "TX": {
+   "roster": true,
+   "count": 178,
+   "seats": 181,
+   "unmatched_districts": 0
+  },
+  "UT": {
+   "roster": true,
+   "count": 103,
+   "seats": 104,
+   "unmatched_districts": 0
+  },
+  "VT": {
+   "roster": true,
+   "count": 180,
+   "seats": 180,
+   "unmatched_districts": 0
+  },
+  "VA": {
+   "roster": true,
+   "count": 139,
+   "seats": 140,
+   "unmatched_districts": 0
+  },
+  "WA": {
+   "roster": true,
+   "count": 147,
+   "seats": 147,
+   "unmatched_districts": 0
+  },
+  "WV": {
+   "roster": true,
+   "count": 134,
+   "seats": 134,
+   "unmatched_districts": 0
+  },
+  "WI": {
+   "roster": true,
+   "count": 132,
+   "seats": 132,
+   "unmatched_districts": 0
+  },
+  "WY": {
+   "roster": true,
+   "count": 93,
+   "seats": 93,
+   "unmatched_districts": 0
+  },
+  "AS": {
+   "roster": false,
+   "reason": "Open States has no legislator data for this jurisdiction"
+  },
+  "DC": {
+   "roster": true,
+   "count": 13,
+   "seats": 13,
+   "unmatched_districts": 13
+  },
+  "GU": {
+   "roster": false,
+   "reason": "Open States has no legislator data for this jurisdiction"
+  },
+  "MP": {
+   "roster": false,
+   "reason": "Open States has no legislator data for this jurisdiction"
+  },
+  "PR": {
+   "roster": true,
+   "count": 81,
+   "seats": 78,
+   "unmatched_districts": 25
+  },
+  "VI": {
+   "roster": false,
+   "reason": "Open States has no legislator data for this jurisdiction"
+  }
+ }
+}
