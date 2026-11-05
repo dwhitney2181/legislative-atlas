@@ -9,6 +9,7 @@ An interactive map and seat list of the 2026 state legislative elections in all 
 - **Results stay current by themselves.** The page reads the published results feed (`atlas-feed.json` in the election-2026 repository) straight from GitHub, so updating that file updates the site. If GitHub can't be reached, it uses the bundled copy, `results_feed.json`. **Update selected** re-reads the feed; auto-refresh re-reads it every 15 minutes.
 - **Bundled district maps.** 2022 Census boundaries for all 50 states and Puerto Rico, labeled to match the results feed. Michigan, Wisconsin, Ohio, Georgia, North Carolina, Washington, Montana, North Dakota and New York redrew some districts after 2022: for those, the page first tries Election Wrld's current maps and, if it can't reach them, shows the 2022 lines with a note saying so. New Hampshire's floterial (overlay) districts have no separate shape; their results appear in the seat list.
 - Multi-seat districts are colored once every seat in them is reported, even without a member roster.
+- **The national map is colored.** A switch picks between *Reported winners* (which party won more of the 2026 races reported so far; deeper color = more lopsided and more races in) and *Seats that changed party* (net gains). Neither is chamber control: seats not on the ballot and uncalled races aren't counted. Hover or tap a state for its numbers.
 
 ## v1.3.0
 
@@ -63,7 +64,7 @@ JSON (`{"races": [...]}`) or CSV with columns
 - Flips count only where the previous seat holder's party is known: an explicit "Flipped X to Y" note from the source, or, for Utah, the documented pre-election holder. A vacant seat, or a new member of the same party, is not a flip.
 - Districts that elect several members on one ballot (New Hampshire, Vermont, Arizona, North Dakota, South Dakota, parts of Maryland) are listed one row per winner and marked `multimember`; they are not counted in the flips table, because the source doesn't say which seat changed hands. Multi-winner rows whose winners belong to different parties are skipped for the same reason.
 - Washington and Idaho elect each House position separately; the feed numbers them in the order MultiState lists them.
-- National state shading stays neutral unless a full seat roster is loaded; a handful of results never turns a whole state red or blue.
+- National shading reflects reported 2026 races only, and fades when few races are reported, so a handful of results never paints a whole state solid red or blue.
 
 ## Updating the data
 
