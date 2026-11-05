@@ -403,9 +403,9 @@ FEED_META=obj.meta||null;FEED_LOADED_AT=Date.now();
 let n=applyResults(rows,NATIONWIDE_FROM);
 // 30-minute legislative updates (GitHub Actions); newer rows replace older ones
 try{const lo=await fetchJSON(LIVE_URL),lr=parseRows(lo);if(lr.length){n+=applyResults(lr,NATIONWIDE_FROM);const t=lo.meta?.data_as_of_utc;if(t&&(!FEED_META?.data_as_of_utc||t>FEED_META.data_as_of_utc))FEED_META={...(FEED_META||{}),data_as_of_utc:t}}}catch(e){}
-const states=new Set(rows.map(r=>String(r.state||'').toUpperCase())).size;
+const known=Object.values(data.results).filter(r=>r&&['leading','reported','called','certified'].includes(r.status));const states=new Set(known.map(r=>r.state)).size;
 const asof=feedAsOf();
-setStatus(manual&&!n?`No new results since the last check${asof?` (data as of ${asof})`:''}.`:`Loaded ${rows.length.toLocaleString()} reported results across ${states} states${asof?`, as of ${asof}`:''}, from ${where}. Unofficial; uncalled races are not shown.`,'ok');
+setStatus(manual&&!n?`No new results since the last check${asof?` (data as of ${asof})`:''}.`:`Loaded ${known.length.toLocaleString()} reported results across ${states} states and territories${asof?`, as of ${asof}`:''}, from ${where}. Unofficial; uncalled races are not shown.`,'ok');
 updateCoverage();return n;
 }
 async function detectServer(){try{const h=await fetchJSON('/api/health');HAS_SERVER=h?.status==='ok'}catch(e){HAS_SERVER=false}
