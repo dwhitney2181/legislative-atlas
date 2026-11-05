@@ -32,6 +32,19 @@ DATA_API='https://www.electionwrld.com/api/v1/datasets'
 JURISDICTIONS=json.loads((HERE/'jurisdictions.json').read_text())
 GUAM_SEED=json.loads((HERE/'guam_nov4_snapshot.json').read_text())
 USVI_SEED=json.loads((HERE/'usvi_nov3_snapshot.json').read_text())
+UTAH_SEED=json.loads((HERE/'utah_nov4_snapshot.json').read_text())
+# Utah's bundled Nov 4 morning snapshot, usable as a server-side fallback. Holdover
+# senators are not 2026 results; the one vacant prior seat ('V') becomes unknown ('U').
+UTAH_SEED_ROWS=[{**r,'state':'UT','district':str(r.get('district')),
+                 'previous_party':'U' if r.get('previous_party')=='V' else r.get('previous_party'),
+                 'source':r.get('source') or 'Utah 2026 documented snapshot','source_kind':'seed'}
+                for r in UTAH_SEED.get('races',[]) if r.get('status')!='holdover']
+# Nationwide results feed (all states with reported winners). The live copy is the
+# atlas-feed.json file in the election-2026 repository; a dated copy ships with this
+# app so the map still has data if GitHub can't be reached. Set
+# ATLAS_RESULTS_FEED_URL to another URL to override, or to "off" to disable.
+DEFAULT_FEED_URL='https://raw.githubusercontent.com/dwhitney2181/election-2026/main/atlas-feed.json'
+BUNDLED_FEED=HERE/'results_feed.json'
 ISLAND_GEO=json.loads((HERE/'island_geography.json').read_text())
 STATES={r['code'] for r in JURISDICTIONS}
 SLUGS={r['code']:re.sub(r'[^a-z0-9]+','-',r['name'].lower()).strip('-') for r in JURISDICTIONS}
@@ -76,7 +89,7 @@ def enforce_audited_utah_41(st,payload):
 
 # Lower chambers whose geographic districts commonly fill multiple member positions.
 # The automated importer does not presume one top-vote-getter won an individual seat.
-MULTI_LOWER={'AZ','ID','NJ','ND','WA','NH','VT','MD'}
+MULTI_LOWER={'AZ','ID','NJ','ND','SD','WA','NH','VT','MD'}
 CACHE={};LOCK=RLock()
 LOG_LOCK=RLock()
 
@@ -340,6 +353,60 @@ def get_civic_rows(st):
         r['source_url']='https://civicapi.org'
     return {(r['chamber'],r['district']):r for r in found}
 
+def _load_feed():
+    """Return (rows, label, error). Falls back to the bundled copy on any failure."""
+    url=os.getenv('ATLAS_RESULTS_FEED_URL','').strip()
+    if url.lower() in ('off','0','none','disabled'):return [],'',None
+    url=url or DEFAULT_FEED_URL
+    error=None
+    try:
+        obj=fetch(url)
+        rows=[r for r in parse_rows(obj) if isinstance(r,dict)]
+        if rows:
+            stamp=(obj.get('meta') or {}).get('data_as_of_utc') if isinstance(obj,dict) else None
+            return rows,'Nationwide results feed'+(' (data as of '+stamp+')' if stamp else ''),None
+        error='feed returned no rows'
+    except Exception as e:error=str(e)[:150]
+    try:
+        obj=json.loads(BUNDLED_FEED.read_text(encoding='utf-8'))
+        rows=[r for r in parse_rows(obj) if isinstance(r,dict)]
+        stamp=(obj.get('meta') or {}).get('data_as_of_utc')
+        return rows,'Bundled results feed copy'+(' (data as of '+stamp+')' if stamp else ''),error
+    except (OSError,ValueError):return [],'',error
+
+def feed_rows_by_state():
+    """Feed rows grouped by state code; cached for 10 minutes."""
+    def work():
+        rows,label,error=_load_feed()
+        if error:activity(f'FEED: live feed unavailable ({error}); using {label or "no feed"}')
+        out={}
+        for r in rows:
+            st=str(r.get('state','')).upper()
+            if st in STATES:out.setdefault(st,[]).append(r)
+        return {'rows':out,'label':label,'error':error}
+    return cached('feed',600,work)
+
+def all_results():
+    """Every known 2026 result in one response, for the page's first paint."""
+    def work():
+        feed=feed_rows_by_state()
+        races=[];states=0
+        for code in sorted(STATES):
+            rows=list(feed['rows'].get(code,[]))
+            if code=='GU':rows=GUAM_SEED['races']+rows
+            if code=='VI':rows=USVI_SEED['races']+rows
+            if code=='UT':rows=UTAH_SEED_ROWS+rows
+            merged=merge_rows(snapshot_rows(code),rows,code)
+            if code=='UT':merged=enforce_audited_utah_41('UT',{'races':merged}).get('races',merged)
+            if merged:states+=1
+            races.extend(merged)
+        return {'meta':{'source':feed['label'] or 'Bundled seeds and saved observations',
+                        'timestamp':utcnow(),'matched':len(races),'jurisdictions':states,'partial':True,
+                        'warnings':[f"Live feed unavailable: {feed['error']}"] if feed['error'] else [],
+                        'note':'Unofficial reported winners and leaders. Uncalled races are not listed.'},
+                'races':races}
+    return cached('all-results',120,work)
+
 def get_results(st):
     """Merge publisher listings, available vote counts and operator-verified news.
 
@@ -347,13 +414,14 @@ def get_results(st):
     response marks whether it came from cache or includes new source readings.
     """
     def work():
-        custom=os.getenv('ATLAS_RESULTS_FEED_URL','').strip()
-        if custom:
-            obj=fetch(custom)
-            rows=[r for r in parse_rows(obj) if isinstance(r,dict) and str(r.get('state','')).upper()==st]
-            if not rows:raise RuntimeError('Configured feed has no matching jurisdiction rows.')
-            return save_observed(st,rows,['Configured 2026 feed'])
         rows=[];sources=[];errors=[]
+        try:
+            feed=feed_rows_by_state()
+            fr=feed['rows'].get(st,[])
+            if fr:
+                rows.extend(fr);sources.append(feed['label']+' ('+str(len(fr))+')')
+            if feed['error']:errors.append('Live feed: '+feed['error'])
+        except Exception as e:errors.append('Feed: '+str(e)[:150])
         if os.getenv('ATLAS_MULTISTATE_ENABLE','1')!='0':
             try:
                 ms=get_multistate(st)
@@ -377,6 +445,16 @@ def get_results(st):
             if st=='GU':
                 rows.extend(GUAM_SEED['races'])
                 sources.append('Guam Nov 4 reported 15-candidate slate')
+        if st=='UT' and not rows and not read_json(st):
+            # Same idea as Guam/VI: never answer "no results" for Utah when a dated snapshot ships with the app.
+            rows.extend(UTAH_SEED_ROWS)
+            sources.append('Bundled Utah Nov 4 morning snapshot')
+        if not rows and not any(j['code']==st and j.get('up2026') for j in JURISDICTIONS):
+            # Louisiana, Mississippi, New Jersey, Virginia, Puerto Rico...: nothing on the 2026 ballot.
+            return {'meta':{'source':'No regular legislative elections in 2026','timestamp':utcnow(),
+                            'matched':0,'partial':False,'warnings':[],
+                            'notice':'This legislature had no regularly scheduled general election in November 2026.'},
+                    'races':[]}
         if not rows:
             previous=read_json(st)
             if previous:
@@ -475,8 +553,12 @@ class H(BaseHTTPRequestHandler):
             if path.path=='/api/results':
                 if st not in STATES:return self.err('Unknown jurisdiction',400)
                 return self.json(get_results(st))
-            if path.path=='/api/health':return self.json({'status':'ok','version':'1.2.6','time':utcnow()})
-            if path.path=='/api/coverage':return self.json(get_coverage(JURISDICTIONS))
+            if path.path=='/api/results-all':return self.json(all_results())
+            if path.path=='/api/health':return self.json({'status':'ok','version':'1.3.0','time':utcnow()})
+            if path.path=='/api/coverage':
+                try:extra=feed_rows_by_state()['rows']
+                except Exception:extra={}
+                return self.json(get_coverage(JURISDICTIONS,extra))
             if path.path=='/jurisdictions_2026.csv':return self.send((HERE/'jurisdictions_2026.csv').read_bytes(),'text/csv')
             if path.path=='/README.md':return self.send((HERE/'README.md').read_bytes(),'text/plain')
             if path.path=='/source-policy.html':return self.send((HERE/'source-policy.html').read_bytes(),'text/html; charset=utf-8')

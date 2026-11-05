@@ -1,69 +1,68 @@
-## v1.2.4 — Utah House 41 integrity fix
+# U.S. State and Territory Legislature Atlas — 2026 (v1.3.0)
 
-John Arthur (D), not Darren Croft (R), led Utah House District 41 in the November 4 general-election reports. The updated client/server repairs a known incorrect cached candidate without clearing other jurisdictions or imports. The correction is a dated unofficial snapshot, not a certified result. civicAPI records must now explicitly identify the November 3 general election or provide matching date metadata; ambiguous race details are omitted, which can reduce automatic coverage. See CHANGELOG_v1_2_4.txt.
+An interactive map and seat list of the 2026 state legislative elections in all 50 states, D.C. and the five inhabited territories (56 jurisdictions, 7,575 seats; 6,223 seats regularly on the 2026 ballot, per NCSL's June 25, 2026 chamber schedules). Results are **unofficial** and partial until canvassed.
 
-## v1.2.3 — Terminal logging restored
+## What's new in v1.3.0
 
-The national server previously suppressed all HTTP activity. This version restores concise per-request logs and adds result-source status, provider warnings, and stale/cache labels. Run `python3 -u live_server.py` and keep Chrome open to enable the selected-state 3-minute refresh. This is an observability fix, not a new election data source.
+- **Every state loads on open.** The page now pulls one nationwide results feed when it starts (`GET /api/results-all`), so a first-time visitor sees reported winners and flips for every state that has them, not only Utah.
+- **Nationwide results feed.** The server reads `atlas-feed.json` from the [election-2026](https://github.com/dwhitney2181/election-2026) repository (MultiState reported winners for 45 states, plus Utah vote counts). A dated copy, `results_feed.json`, ships with the app and is used automatically if GitHub can't be reached.
+- **The feed no longer replaces the other sources.** Previously, setting `ATLAS_RESULTS_FEED_URL` switched off MultiState, civicAPI, the curated rows and the territory seeds, and any state missing from the feed returned an error. Now the feed is merged with them.
+- **Utah always has data.** If every source fails, Utah falls back to its bundled November 4 snapshot, the same way Guam and the Virgin Islands already did.
+- States with no regular legislative election in 2026 (Louisiana, Mississippi, New Jersey, Virginia, Puerto Rico and others) now return an empty result with a notice instead of an error.
+- South Dakota's two-member House districts are no longer read as single-seat races from MultiState.
 
-## v1.2.2 — November 4, 2026: flip counter repair
+Earlier fixes still apply: the Utah House 41 correction (John Arthur, D), restored terminal logging (v1.2.3), the flip-counter repair (v1.2.2) and the bundled territory outlines with the Guam and Virgin Islands slates (v1.2.5).
 
-Fixed a regression where a live feed with no `previous_party` field erased the ability to identify party flips. For Utah, the pre-election baseline captured with the November 4 snapshot is preserved even if the results are replaced or a legacy browser cache supplies an unknown previous party. No generic up-to-date roster is treated as a verified 2026 pre-election baseline for other states. The "Flips only" filter now makes its behavior explicit in the table description. Existing local server and user imports are retained. Utah seed: 17 apparent House flips, 2 apparent Senate flips (provisional snapshot; not certified).
+## Run it
 
-# U.S. State and Territory Legislature Atlas — 2026 (v1.2 beta)
+```bash
+python3 -u live_server.py        # then open http://127.0.0.1:8766
+```
 
-**Scope:** 50 U.S. states, the District of Columbia and the five inhabited territories (56 jurisdictions; 7,575 legislative seats). Scheduled 2026 contests: 6,139 **state** seats and 84 in D.C./territorial legislatures according to the jurisdiction inventory built from NCSL's June 25, 2026 chamber schedules. Special-election coverage is not included in these baseline counts.
+No packages are needed beyond Python 3. On Render, `render.yaml` and the `Dockerfile` deploy it on the free plan (see `START_HERE.md`).
 
-**Important:** This release is an interactive **incomplete** election results atlas, **not** a nationwide live results declaration. It ships with a dated Utah November 4 morning snapshot (90 2026 election leaders/results and 14 Senate holdovers). Other jurisdictions do not ship with 2026 winners. Remote MultiState and civicAPI integrations are best-effort and have *not* been validated end-to-end from this offline build environment.
+### Settings (environment variables)
 
-## Start
+| Variable | Default | Purpose |
+|---|---|---|
+| `ATLAS_RESULTS_FEED_URL` | the election-2026 `atlas-feed.json` raw URL | Nationwide results feed. Set to another JSON/CSV URL to override, or `off` to disable. |
+| `ATLAS_MULTISTATE_ENABLE` | `1` | Check MultiState's results page for the selected state. |
+| `ATLAS_CIVIC_ENABLE` | `1` | Check civicAPI vote counts for the selected state. |
+| `ATLAS_DATA_DIR` | `./runtime` | Where observed snapshots are saved. Optional; on Render Free this storage is wiped on restart. |
+| `HOST`, `PORT` | `127.0.0.1`, `8766` | Where the server listens. |
 
-- Open `index.html` for the browser-only dashboard. It shows jurisdiction inventory, all Utah snapshot records, available external map geometry and local CSV/JSON imports. Opening the HTML alone does not create a live nationwide result stream.
-- For automatic updates, run `python live_server.py` and open <http://127.0.0.1:8766>. Results are attributed per seat, and only explicit source records are accepted. `GET /api/coverage` shows which jurisdiction result records are currently available.
-- To test the upstream publishers from an environment with internet, run `python tools/probe_sources.py UT TX` and compare the returned races against the publisher and official election office. Blank/missing contests remain unknown.
-- To save source-verified news rows for *all visitors*, run `python tools/import_verified.py checked_results.csv`. See [DEPLOYMENT.md](DEPLOYMENT.md).
+### API
+
+- `/api/results-all`: every known result, all jurisdictions (used for the first page load).
+- `/api/results?state=WI`: one jurisdiction, merging the feed, MultiState, civicAPI, curated rows and seeds.
+- `/api/coverage`: how many records each jurisdiction has.
+- `/api/multistate?state=WI`, `/api/geo?state=WI`, `/api/national-geo`, `/api/roster?state=WI`, `/api/health`.
+
+### Feed row format
+
+JSON (`{"races": [...]}`) or CSV with columns
+`state,chamber,district,seat,candidate,party,status,previous_party,votes,reporting,updated,source,source_kind,source_url,multimember`.
+`chamber` is `upper` or `lower` (Nebraska's unicameral legislature is `upper`); `party` is one of `R, D, F, I, O, N`. The same format works with the page's **Import results** button.
 
 ## Data and source semantics
 
 - `leading`: votes counted so far favor a candidate; no call implied.
-- `reported`: MultiState/publisher explicitly records a winner; not equivalent to official certification or an independent AP call.
-- `called`: direct, verifiable explicit call from a known source.
-- `certified`: official canvass/certification only.
-- `holdover`: current legislator whose seat was not regularly on the 2026 ballot; not a 2026 result.
-- Unavailable source data do not become zeros, projected winners, or inferred party colors.
-- Flips count only results with a known, verified party of the previous seat holder. A vacant seat or replacement of a same-party incumbent does not count as a flip.
-- Multi-member districts require a *unique seat identifier* for each winner before individual seat-level flip math is permitted. A partially reported multi-member district stays neutral on the map.
-- Party color for **Independent American Party** is now the other/minor-party category, rather than unaffiliated/independent. Utah Forward retains a distinct purple color. Local territory parties use `O`, but their original label should be preserved in source evidence.
-- National state-level shading stays neutral unless a full, distinct seat roster is loaded. A handful of results must not make a whole state red or blue.
-- 2026 pre-election baselines **must be frozen** and verified; a current member roster retrieved after future swearing-in dates is not automatically trusted for retrospective flip math.
+- `reported`: MultiState or another publisher explicitly records a winner; not an official certification or an independent AP call.
+- `called`: an explicit call from a named source.
+- `certified`: official canvass only.
+- `holdover`: a current legislator whose seat was not on the 2026 ballot; not a 2026 result.
+- Races without a reported winner are left out. Missing data never becomes zero votes, a projected winner or an inferred party color.
+- Flips count only where the previous seat holder's party is known: an explicit "Flipped X to Y" note from the source, or, for Utah, the documented pre-election holder. A vacant seat, or a new member of the same party, is not a flip.
+- Districts that elect several members on one ballot (New Hampshire, Vermont, Arizona, North Dakota, South Dakota, parts of Maryland) are listed one row per winner and marked `multimember`; they are not counted in the flips table, because the source doesn't say which seat changed hands. Multi-winner rows whose winners belong to different parties are skipped for the same reason.
+- Washington and Idaho elect each House position separately; the feed numbers them in the order MultiState lists them.
+- National state shading stays neutral unless a full seat roster is loaded; a handful of results never turns a whole state red or blue.
 
-## Source attribution
+## Updating the feed
 
-Sources and limits are described in `source-policy.html`, including NCSL, U.S. Census geographic files, MultiState, Election Wrld and civicAPI. Data may be stale or incomplete. Third-party reuse must follow source licensing/usage policies. External geography is Census-derived; some 2026 enacted district boundaries may differ. A neutral tile is a fallback *inventory*, not a geographic polygon.
+The feed is built by `tools/build_atlas_feed.py` in the election-2026 repository. Re-run it after updating that repository's results files and push; the atlas picks up the change within 10 minutes. To refresh the bundled copy here, copy `atlas-feed.json` over `results_feed.json`.
 
-## Deployment and validation
+## Sources and limits
 
-See `DEPLOYMENT.md` for the Dockerfile, Render Blueprint, optional persistent volume, news-import workflow, and launch acceptance criteria. The included Python server is a simple single-process application; do not assume it has been load-tested or hardened for a high-traffic public launch. Caches persist to `ATLAS_DATA_DIR` when writable; if the source goes down it can serve the last observed record (labeled stale), never a fabricated update.
+Sources and limits are described in `source-policy.html`: NCSL, U.S. Census geographic files, MultiState, Election Wrld, civicAPI and the local news outlets named in each record. District maps load from Election Wrld; if that site is unavailable, the page shows a seat grid instead. Some 2026 district boundaries may differ from the Census files. Check results against the linked sources before relying on them.
 
-Commands:
-
-```bash
-python -m pytest -q tests
-python test_sources.py
-python check_ui.py
-python tools/audit_coverage.py --csv coverage.csv
-```
-
-Release testing: unit tests for result validation, seat identity, MultiState table parsing, source precedence and persistent outage fallback; Playwright browser tests for multi-member districts, neutral-state map, preserved Utah baseline, 50-state scan UI and no browser JS errors. **Not verified in this sandbox:** actual external 2026 feeds, every real GIS provider response, publisher-licensed distribution, territory-specific sources, Render service deployment or public-server scaling.
-
-
-## v1.2.5: Territory maps and Guam reported slate
-
-See TERRITORIES_README.md. All island territory maps are locally bundled and will load without network requests. See the sidebar seat list for candidate results; these neutral island shapes are **not legislative district maps**. Guam's 15 reported at-large leaders are included with dated local news attribution and no invented individual flips.
-
-
-## v1.2.5 local installation
-
-No hosting is required. Run `python3 -u live_server.py` on your Mac from the folder containing `index.html`, and browse to `http://127.0.0.1:8766`. Run Ctrl+C to stop.
-
-The geographic coastlines for the five inhabited island territories and a DC outline are bundled locally; they are **not voting-district maps**. Guam's 15-seat Nov. 4 unofficial slate and USVI's Nov. 3 unofficial top-15 reported slate are also bundled with source metadata. **Those territory snapshots do not live-update automatically** until territory-specific official feed parsers are added. Use CSV/JSON imports for verified newer territory returns. Full nationwide coverage remains incomplete.
+The server is a single Python process and has not been load-tested for heavy public traffic.

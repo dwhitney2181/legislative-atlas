@@ -16,3 +16,5 @@ services:
         value: '1'
       - key: ATLAS_CIVIC_ENABLE
         value: '1'
+      - key: ATLAS_RESULTS_FEED_URL
+        value: https://raw.githubusercontent.com/dwhitney2181/election-2026/main/atlas-feed.json

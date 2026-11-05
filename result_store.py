@@ -32,7 +32,7 @@ def validate_row(r, st=None, curated=False):
     ch=r.get('chamber')
     if ch not in ('upper','lower'):return None
     dist=str(r.get('district') or '').strip()
-    if not 0<len(dist)<=100 or not re.fullmatch(r'[a-zA-Z0-9 .\-]+',dist):return None
+    if not 0<len(dist)<=100 or not re.fullmatch(r"[a-zA-Z0-9 .,'&\-]+",dist):return None
     if not str(r.get('candidate') or '').strip():return None
     party=str(r.get('party') or '')
     if party not in PARTIES:return None
@@ -121,7 +121,9 @@ def save_observed(st,rows,sources,warnings=None):
     write_json(st,obj)
     return obj
 
-def get_coverage(jurisdictions):
+def get_coverage(jurisdictions, extra=None):
+    """extra: optional {state: [rows]} from the nationwide results feed."""
+    extra=extra or {}
     states=[];total=0;with_data=0
     seed_path=Path(__file__).parent/'utah_nov4_snapshot.json'
     try: bundled=json.loads(seed_path.read_text(encoding='utf-8')).get('races',[])
@@ -139,7 +141,8 @@ def get_coverage(jurisdictions):
                 vi=json.loads((Path(__file__).parent/'usvi_nov3_snapshot.json').read_text(encoding='utf-8')).get('races',[])
                 rows=merge_rows(rows,vi,code)
             except (OSError,ValueError):pass
-        if code=='UT':rows=merge_rows(rows,[{**r,'state':'UT','previous_party':'U' if r.get('previous_party')=='V' else r.get('previous_party'),'source':r.get('source') or 'Utah 2026 documented snapshot','source_kind':'seed'} for r in bundled if r.get('status')!='holdover'],code)
+        if code=='UT':rows=merge_rows(rows,[{**r,'state':'UT','district':str(r.get('district')),'previous_party':'U' if r.get('previous_party')=='V' else r.get('previous_party'),'source':r.get('source') or 'Utah 2026 documented snapshot','source_kind':'seed'} for r in bundled if r.get('status')!='holdover'],code)
+        if extra.get(code):rows=merge_rows(rows,extra[code],code)
         if o:rows=merge_rows(rows,o['races'],code)
         if c:rows=merge_rows(rows,c['races'],code)
         n=len(rows);total+=n
