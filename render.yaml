@@ -1,0 +1,18 @@
+services:
+  - type: web
+    runtime: docker
+    plan: free
+    name: us-legislative-atlas-2026
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: '10000'
+      - key: ATLAS_DATA_DIR
+        value: /data
+      - key: ATLAS_MULTISTATE_ENABLE
+        value: '1'
+      - key: ATLAS_CIVIC_ENABLE
+        value: '1'
