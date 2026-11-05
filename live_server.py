@@ -564,7 +564,7 @@ class H(BaseHTTPRequestHandler):
             if path.path=='/source-policy.html':return self.send((HERE/'source-policy.html').read_bytes(),'text/html; charset=utf-8')
             # Static files the standalone page loads (bundled maps and results feed copy).
             rel=path.path.lstrip('/')
-            if re.fullmatch(r'(geo/(sld/[a-z]{2}|states)\.topo\.json|results_feed\.json|federal_results\.json|[a-z0-9_]+_snapshot\.json|island_geography\.json)',rel):
+            if re.fullmatch(r'(geo/((sld|cd)/[a-z]{2}|states)\.topo\.json|results_feed\.json|federal_results\.json|[a-z0-9_]+_snapshot\.json|island_geography\.json)',rel):
                 f=(HERE/rel).resolve()
                 if HERE in f.parents and f.is_file():return self.send(f.read_bytes(),'application/json')
             return self.err('Not found',404)
