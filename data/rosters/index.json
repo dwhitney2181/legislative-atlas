@@ -1,5 +1,5 @@
 {
- "as_of": "2026-11-04",
+ "as_of": "2026-11-05",
  "jurisdictions": {
   "AL": {
    "roster": true,
@@ -173,7 +173,7 @@
    "roster": true,
    "count": 406,
    "seats": 424,
-   "unmatched_districts": 24
+   "unmatched_districts": 12
   },
   "NJ": {
    "roster": true,
